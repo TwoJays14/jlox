@@ -78,6 +78,9 @@ public class Scanner {
     }
   }
 
+  /**
+   * @return next character in the source file
+   */
   private char advance() {
     return source.charAt(current++);
   }
@@ -86,10 +89,20 @@ public class Scanner {
     return current >= source.length();
   }
 
+  /**
+   *
+   * @param type type of token that has been identified - mapped against TokenType enum
+   *
+   */
   private void addToken(TokenType type) {
     addToken(type, null);
   }
 
+  /**
+   * Takes substring of the identified token from the source file and appends it to the tokens list.
+   * @param type type of token that has been identified - mapped against TokenType enum
+   * @param literal object literal that has been identified - mapped against TokenType enum
+   */
   private void addToken(TokenType type, Object literal) {
     String text = source.substring(start, current);
     tokens.add(new Token(type, text, literal, line));
