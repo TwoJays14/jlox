@@ -47,7 +47,7 @@ public class Scanner {
   }
 
   public List<Token> scanTokens() {
-    while(!isAtEnd()) {
+    while(!isAtFileEnd()) {
       start = current;
       scanToken();
     }
@@ -57,9 +57,9 @@ public class Scanner {
   }
 
   private void scanToken() {
-    char c = advance();
+    char currentChar = advanceToNextChar();
 
-    switch (c) {
+    switch (currentChar) {
       case '(': addToken(LEFT_PAREN); break;
       case ')': addToken(RIGHT_PAREN); break;
       case '{': addToken(LEFT_BRACE); break;
@@ -71,21 +71,26 @@ public class Scanner {
       case ';': addToken(SEMICOLON); break;
       case '*': addToken(STAR); break;
       case '!':
-        addToken(match('=') ? BANG_EQUAL : BANG);
+        addToken(isCurrentMatch('=') ? BANG_EQUAL : BANG);
         break;
       case '=':
-        addToken(match('=') ? EQUAL_EQUAL : EQUAL);
+        addToken(isCurrentMatch('=') ? EQUAL_EQUAL : EQUAL);
         break;
       case '<':
-        addToken(match('=') ? LESS_EQUAL : LESS);
+        addToken(isCurrentMatch('=') ? LESS_EQUAL : LESS);
         break;
       case '>':
-        addToken(match('=') ? GREATER_EQUAL : GREATER);
+        addToken(isCurrentMatch('=') ? GREATER_EQUAL : GREATER);
         break;
       case '/':
-        if(match('/')) {
-          while(peek() != '\n' && !isAtEnd()) advance();
-        } else  {
+        if(isCurrentMatch('/')) {
+          while(peekCurrentChar() != '\n' && !isAtFileEnd()) {
+            advanceToNextChar();
+          }
+        } else if (isCurrentMatch('*')) {
+          multiLineComment();
+        }
+        else  {
           addToken(SLASH);
         }
         break;
@@ -101,9 +106,9 @@ public class Scanner {
         break;
 
       default:
-        if(isDigit(c)) {
+        if(isDigit(currentChar)) {
           number();
-        } else if (isAlpha(c)) {
+        } else if (isAlpha(currentChar)) {
           identifier();
         } else {
           com.craftinginterprers.lox.Lox.error(line, "Unexpected character.");
@@ -115,11 +120,11 @@ public class Scanner {
   /**
    * @return next character in the source file
    */
-  private char advance() {
+  private char advanceToNextChar() {
     return source.charAt(current++);
   }
 
-  private boolean isAtEnd() {
+  private boolean isAtFileEnd() {
     return current >= source.length();
   }
 
@@ -142,8 +147,8 @@ public class Scanner {
     tokens.add(Token.Create(type, text, literal, line));
   }
 
-  private boolean match(char expected) {
-    if(isAtEnd()) {
+  private boolean isCurrentMatch(char expected) {
+    if(isAtFileEnd()) {
       return false;
     }
 
@@ -155,33 +160,33 @@ public class Scanner {
     return true;
   }
 
-  private char peek() {
-    if(isAtEnd()) {
+  private char peekCurrentChar() {
+    if(isAtFileEnd()) {
       return '\0';
     }
 
     return source.charAt(current);
   }
 
-  private char peekNext() {
-    if(current++ >= source.length()) {
+  private char peekNextChar() {
+    if(current+ 1 >= source.length()) {
       return '\0';
     }
 
-    return source.charAt(current++);
+    return source.charAt(current+ 1);
   }
 
   private void string() {
-    while(peek() != '"' && !isAtEnd()) {
-      if(peek() == '\n') line++;
-      advance();
+    while(peekCurrentChar() != '"' && !isAtFileEnd()) {
+      if(peekCurrentChar() == '\n') line++;
+      advanceToNextChar();
     }
 
-    if(isAtEnd()) {
+    if(isAtFileEnd()) {
       com.craftinginterprers.lox.Lox.error(line, "Unterminated string.");
     }
 
-    advance(); // To the closing "
+    advanceToNextChar(); // To the closing "
 
     String value = source.substring(start + 1, current - 1); // Gets string without the quotation marks
     addToken(STRING, value);
@@ -192,14 +197,14 @@ public class Scanner {
   }
 
   private void number() {
-    while(isDigit(peek())) {
-      advance();
+    while(isDigit(peekCurrentChar())) {
+      advanceToNextChar();
 
-      if(peek() == '.' && isDigit(peekNext())) {
-        advance();
+      if(peekCurrentChar() == '.' && isDigit(peekNextChar())) {
+        advanceToNextChar();
 
-        while(isDigit(peek())) {
-          advance();
+        while(isDigit(peekCurrentChar())) {
+          advanceToNextChar();
         }
       }
     }
@@ -207,9 +212,23 @@ public class Scanner {
     addToken(NUMBER, Double.parseDouble(source.substring(start, current)));
   }
 
+  private void multiLineComment() {
+    while(!isAtFileEnd()) {
+      if(peekCurrentChar() == '*' && peekNextChar() == '/') {
+        advanceToNextChar();
+        advanceToNextChar();
+        break;
+      }
+      if(peekCurrentChar() == '\n') {
+        line++;
+      }
+      advanceToNextChar();
+    }
+  }
+
   private void identifier() {
-    while(isAlphaNumeric(peek())) {
-      advance();
+    while(isAlphaNumeric(peekCurrentChar())) {
+      advanceToNextChar();
     }
 
     String text = source.substring(start, current);
