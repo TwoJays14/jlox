@@ -1,5 +1,7 @@
 package lox;
 
+import com.craftinginterpreters.lox.Lox;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -108,7 +110,7 @@ public class Scanner {
         } else if (isAlpha(currentChar)) {
           tokenizeIdentifier();
         } else {
-          com.craftinginterprers.lox.Lox.error(line, "Unexpected character.");
+          Lox.error(line, "Unexpected character.");
         }
       break;
     }
@@ -180,7 +182,7 @@ public class Scanner {
     }
 
     if(isAtFileEnd()) {
-      com.craftinginterprers.lox.Lox.error(line, "Unterminated string.");
+      Lox.error(line, "Unterminated string.");
     }
 
     next(); // To the closing "
