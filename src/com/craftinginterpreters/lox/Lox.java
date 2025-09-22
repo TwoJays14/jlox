@@ -1,7 +1,6 @@
 package com.craftinginterpreters.lox;
 
 import lox.Scanner;
-import lox.Token;
 
 import java.io.IOException;
 import java.nio.charset.Charset;

@@ -27,7 +27,7 @@ public class GenerateAst {
 
     writer.println("package com.craftinginterpreters.lox;");
     writer.println();
-    writer.println("import lox.Token;");
+    writer.println("import com.craftinginterpreters.lox.Token;");
     writer.println();
     writer.println("abstract class " + baseName + " {");
 
