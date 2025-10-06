@@ -99,7 +99,7 @@ public class Parser {
       return new Expr.Grouping(expr);
     }
 
-    throw error(peek(), "Expect expression.");
+    throw error(peek(), "Expected an expression.");
   }
 
   private Token consume(TokenType type, String message) {
