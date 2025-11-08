@@ -1,5 +1,7 @@
 package com.craftinginterpreters.lox;
 
+import lox.TokenType;
+
 import java.util.List;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
@@ -8,6 +10,19 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   @Override
   public Object visitLiteralExpr(Expr.Literal expr) {
     return expr.value;
+  }
+
+  @Override
+  public Object visitLogicalExpr(Expr.Logical expr) {
+    Object left = evaluate(expr.left);
+
+    if(expr.operator.type == TokenType.OR) {
+      if(isTruthy(left)) return left;
+    } else {
+      if(!isTruthy(left)) return left;
+    }
+
+    return evaluate(expr.right);
   }
 
   @Override
@@ -101,6 +116,17 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Void visitIfStmt(Stmt.If stmt) {
+    if(isTruthy(evaluate(stmt.condition))) {
+      execute(stmt.thenBranch);
+    } else if(stmt.elseBranch != null) {
+      execute(stmt.elseBranch);
+    }
+
+    return null;
+  }
+
+  @Override
   public Void visitVarStmt(Stmt.Var stmt) {
     Object value  = null;
     if(stmt.initializer != null) {
@@ -115,6 +141,15 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   public Void visitPrintStmt(Stmt.Print stmt) {
     Object value = evaluate(stmt.expression);
     System.out.println(stringify(value));
+    return null;
+  }
+
+  @Override
+  public Void visitWhileStmt(Stmt.While stmt) {
+    while(isTruthy(evaluate(stmt.condition))) {
+      execute(stmt.body);
+    }
+
     return null;
   }
 
