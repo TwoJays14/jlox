@@ -15,7 +15,7 @@ class Environment {
     this.enclosing = enclosing;
   }
 
-  void define(String name, Object value) {
+  void bind(String name, Object value) {
     values.put(name, value);
   }
 
